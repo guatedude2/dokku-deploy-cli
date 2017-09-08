@@ -1,0 +1,17 @@
+{
+  "name": "dokku-deploy-cli",
+  "version": "0.0.1",
+  "description": "Dokku Deployment CLI",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "Alejandro Gonzalez Sole",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^2.1.0",
+    "inquirer": "^3.2.3",
+    "semver": "^5.4.1",
+    "update-notifier": "^2.2.0"
+  }
+}
