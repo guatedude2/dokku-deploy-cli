@@ -1,6 +1,6 @@
 {
   "name": "dokku-deploy",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A deployment tool for dokku.",
   "main": "dokku-deploy.js",
   "bin": {
