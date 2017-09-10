@@ -95,7 +95,7 @@ class DokkuDeploy {
 
   menuBumpTagAndDeploy() {
     return this.menuBumpAndTag().then((version) => {
-      this.deployTag(version);
+      return this.deployTag(version);
     })
   }
 
