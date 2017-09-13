@@ -37,6 +37,20 @@ class DokkuDeploy {
 
   setup(choice) {
     return Promise.resolve().then(() => {
+      if (!this.project) {
+        return readPackageJSON(this.cwd).then((app) => {
+          this.project = app;
+        }).catch(() => {
+          throw new Error('Not a Node.js project');
+        });
+      }
+      return Promise.resolve();
+    }).then(() => {
+      return execPromise('git remote get-url dokku').catch((err) => null);
+    }).then((currentURL) => {
+      if (currentURL) {
+        return Promise.resolve({choice: true, currentURL: currentURL.trim()});
+      }
       if (!choice) {
         console.log(chalk.whiteBright('Looks like this repo isn\'t setup to deploy to dokku.'));
         return inquirer.prompt({
@@ -51,15 +65,18 @@ class DokkuDeploy {
       if (!answer.choice) {
         process.exit(1);
       }
-      const example = chalk.gray(`(e.g ssh://dokku@example.com/${this.project.name || 'my-project'})`);
+      const example = chalk.gray(` (e.g ssh://dokku@example.com/${this.project.name || 'my-project'})`);
       return inquirer.prompt({
         type: 'input',
         name: 'url',
-        message: `Enter your dokku URL ${example}:`,
+        message: `Enter your dokku URL${!answer.currentURL && example || ''}:`,
+        default: answer.currentURL || undefined
       });
     }).then((answer) => {
       console.log(chalk.gray('Setting up dokku remote URL...'));
-      return execPromise(`git remote add dokku ${answer.url}`);
+      return execPromise(`git remote add dokku ${answer.url}`).catch(() => {
+        return execPromise(`git remote set-url dokku ${answer.url}`);
+      });
     }).then(() => {
       console.log(chalk.whiteBright('done! You can now re-run your command'));
       process.exit(1);
@@ -199,7 +216,7 @@ class DokkuDeploy {
           console.log(chalk.whiteBright(`Tag ${chalk.green(tag)} is already deployed!`));
           process.exit(0);
         }
-      });
+      }).catch(() => null);
     }).then(() => {
       return wait(3, (count) => {
         process.stdout.write(chalk.gray(`Deploying tag ${chalk.green(tag)} in ${count}...`));
@@ -209,7 +226,7 @@ class DokkuDeploy {
       readline.clearLine(process.stdout, 0);
       console.log(chalk.gray(`Deploying tag ${chalk.green(tag)}...`));
 
-      return spawnPromise(`git push -f dokku ${tag}~0:master`, (data) => {
+      return spawnPromise(`git push -f dokku ${tag}~0:refs/heads/master`, (data) => {
         process.stdout.write(chalk.gray(data));
       }).catch(() => {
         throw new new Error(`Failed deploying ${tag}`);
